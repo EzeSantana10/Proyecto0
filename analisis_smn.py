@@ -1,4 +1,5 @@
 import sys
+from Funciones_smn import measure_cities_read
 
 if len(sys.argv) < 2:
     print("La cantidad de argumentos ingresados es menor a la esperada")
@@ -41,6 +42,8 @@ with open (archivo, "r", encoding="cp1252") as file:
             "velocidad_viento": velocidad_viento,
             "presion": columnas[9].strip()
         }
+
+        print(Funciones_smn.measure_cities_read(diccionario))
 
 
 
