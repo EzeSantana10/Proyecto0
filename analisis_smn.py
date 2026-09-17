@@ -43,7 +43,7 @@ with open (archivo, "r", encoding="cp1252") as file:
             "presion": columnas[9].strip()
         }
 
-        print(Funciones_smn.measure_cities_read(diccionario))
+    print(measure_cities_read(diccionario))
 
 
 

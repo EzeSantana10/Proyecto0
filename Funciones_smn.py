@@ -6,7 +6,7 @@ def measure_cities_read(diccionario) -> list:
 
     ciudades = []
 
-    for clave, valor in diccionario:
+    for clave in diccionario:
         ciudades.append(clave)
 
     return ciudades
