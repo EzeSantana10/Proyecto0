@@ -1,6 +1,6 @@
 import sys
 
-from Funciones_smn import 
+from Funciones_smn import leer_observaciones, cantidad_ciudades, ciudades_completas, horarios_reportados, mostrar_resumen
 
 campos_esperados = [
     "ciudad", "fecha y hora", "condicion", "visibilidad", "temperatura", 
@@ -20,7 +20,7 @@ def main():
         sys.exit("No se pudieron leer observaciones validas.")
     
 if __name__ == "__main__":
-    main()
+    def()
 
 
 
