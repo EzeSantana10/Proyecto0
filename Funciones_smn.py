@@ -1,29 +1,35 @@
 from datetime import datetime
 
-def leer_observaciones(archivo: str) -> dict:
-
+def leer_observaciones(archivo: str, reporte: dict) -> dict:
     """Lee el archivo de observaciones del SMN y devuelve un diccionario
     {ciudad: datos}, con los nombres de ciudad limpios y el campo de viento
     ya separado en dirección y velocidad."""
 
+    
+    reporte["lineas_invalidas"] = 0
+    reporte["columnas_ausentes"] = 0
+
     diccionario = {}
 
-    with open (archivo, "r", encoding="cp1252") as file:
-
+    with open(archivo, "r", encoding="cp1252") as file:
         for linea in file:
-                linea_limpia = linea.strip()
-                columnas = linea_limpia.split(";")
-                ciudad = columnas[0]
+            linea_limpia = linea.strip()
 
+            columnas = linea_limpia.split(";")
 
+            if len(columnas) < 10:
+                reporte["columnas_ausentes"] += 1
+                reporte["lineas_invalidas"] += 1
+                continue
+
+            try:
+                ciudad = columnas[0].strip()
                 viento_sin_parsear = columnas[8].strip()
                 direccion_viento, velocidad_viento = separar_viento(viento_sin_parsear)
-                
 
                 fecha = columnas[1].strip()
                 hora = columnas[2].strip()
                 fecha_y_hora = parsear_fecha_hora(fecha, hora)
-
 
                 diccionario[ciudad] = {
                     "fecha y hora": fecha_y_hora,
@@ -36,6 +42,8 @@ def leer_observaciones(archivo: str) -> dict:
                     "velocidad_viento": velocidad_viento,
                     "presion": columnas[9].strip()
                 }
+            except Exception:
+                reporte["lineas_invalidas"] += 1
 
     return diccionario
 
@@ -171,9 +179,8 @@ def horarios_reportados(observaciones: dict) -> list:
     return lista_ordenada
     
 
-def mostrar_resumen(observaciones: dict) -> None:
-
-    """Imprime por pantalla el resumen con todas las características calculadas. Usar n=5"""
+def mostrar_resumen(observaciones: dict, lineas_invalidas: int = 0, columnas_ausentes: int = 0) -> None:
+    """Imprime por pantalla el resumen con todas las características calculadas y el reporte de inconsistencias. Usar n=5"""
 
     print("--- RESUMEN DEL TIEMPO ---")
     print(f"Total de ciudades analizadas: {len(observaciones)}")
@@ -186,4 +193,8 @@ def mostrar_resumen(observaciones: dict) -> None:
     print(top_n_ciudades(observaciones, "temperatura", 5, False))
     print("Mayor velocidad de viento:")
     print(top_n_ciudades(observaciones, "velocidad_viento", 5, True))
+
+    print("\n--- REPORTE DE ARCHIVO ---")
+    print(f"Líneas inválidas / omitidas: {lineas_invalidas}")
+    print(f"Columnas ausentes: {columnas_ausentes}")
     
