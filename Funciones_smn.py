@@ -1,26 +1,27 @@
 from datetime import datetime
 
 def convertir_dato(dato, es_num=False):
-
     if dato is None:
         return None
-    
+
     dato = str(dato).strip()
-    
+
     if dato in ("", "No se calcula", "-"):
         return None
-        
+
     if es_num:
         try:
-            dato_limpio = dato.replace(",", ".")
+            dato_limpio = dato.split()[0].replace(",", ".")
             num = float(dato_limpio)
+
             if num.is_integer():
                 return int(num)
-            else:
-                return num
+
+            return num
+
         except ValueError:
             return None
-            
+
     return dato
 
 
@@ -252,28 +253,33 @@ def horarios_reportados(observaciones: dict) -> list:
     return lista_ordenada
     
 
-def mostrar_resumen(observaciones: dict, lineas_invalidas: int = 0, columnas_ausentes: int = 0) -> None:
-    """Imprime por pantalla el resumen con todas las características calculadas y el reporte de inconsistencias. Usar n=5"""
+def mostrar_resumen(observaciones: dict, lineas_invalidas: int = 0, columnas_ausentes: int = 0, faltantes_por_campo: dict = None) -> None:
+    """Imprime por pantalla el resumen con todas las características calculadas y el reporte de inconsistencias."""
 
     print("--- RESUMEN DEL TIEMPO ---")
     print(f"Total de ciudades analizadas: {len(observaciones)}")
-    print(cantidad_ciudades(observaciones))
-    print(ciudades_completas(observaciones))
+    print(f"Ciudades con datos completos: {ciudades_completas(observaciones)}")
     print(f"Los horarios reportados son: {horarios_reportados(observaciones)}")
-
     print("\n--- LAS TOP N CIUDADES ---")
     print("Temperaturas más altas:")
     top_n_ciudades(observaciones, "temperatura", 5, True, "°C")
-    print("Temperaturas más bajas:")
+    print("\nTemperaturas más bajas:")
     top_n_ciudades(observaciones, "temperatura", 5, False, "°C")
-    print("Mayor velocidad de viento:")
+    print("\nMayor velocidad de viento:")
     top_n_ciudades(observaciones, "velocidad_viento", 5, True, "km/h")
-    print("Menor velocidad de viento:")
+    print("\nMenor velocidad de viento:")
     top_n_ciudades(observaciones, "velocidad_viento", 5, False, "km/h")
-
     print("\n--- REPORTE DE ARCHIVO ---")
     print(f"Líneas inválidas / omitidas: {lineas_invalidas}")
-    print(f"Columnas ausentes: {columnas_ausentes}")
+    print(f"Columnas ausentes (totales): {columnas_ausentes}")
+
+    if faltantes_por_campo:
+        print("\nFaltantes por campo:")
+        for campo, cantidad in faltantes_por_campo.items():
+            print(f"  - {campo}: {cantidad}")
+    else:
+        print("\nNo se recibió el desglose de faltantes por campo.")
+    
     
     
     

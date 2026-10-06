@@ -39,8 +39,9 @@ def main() -> None:
     fc.mostrar_resumen(
     observaciones,
     reporte.get("lineas_invalidas", 0),
-    reporte.get("columnas_ausentes", 0)
-    )
+    reporte.get("columnas_ausentes", 0),
+    reporte.get("faltantes_por_campo", {})
+)
 
 if __name__ == "__main__":
     main()
