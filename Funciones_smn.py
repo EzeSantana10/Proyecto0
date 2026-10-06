@@ -1,11 +1,34 @@
 from datetime import datetime
 
+def convertir_dato(dato, es_num=False):
+
+    if dato is None:
+        return None
+    
+    dato = str(dato).strip()
+    
+    if dato in ("", "No se calcula", "-"):
+        return None
+        
+    if es_num:
+        try:
+            dato_limpio = dato.replace(",", ".")
+            num = float(dato_limpio)
+            if num.is_integer():
+                return int(num)
+            else:
+                return num
+        except ValueError:
+            return None
+            
+    return dato
+
+
 def leer_observaciones(archivo: str, reporte: dict) -> dict:
     """Lee el archivo de observaciones del SMN y devuelve un diccionario
     {ciudad: datos}, con los nombres de ciudad limpios y el campo de viento
     ya separado en dirección y velocidad."""
 
-    
     reporte["lineas_invalidas"] = 0
     reporte["columnas_ausentes"] = 0
 
@@ -33,14 +56,14 @@ def leer_observaciones(archivo: str, reporte: dict) -> dict:
 
                 diccionario[ciudad] = {
                     "fecha y hora": fecha_y_hora,
-                    "condicion": columnas[3].strip(),
-                    "visibilidad": columnas[4].strip(),
-                    "temperatura": columnas[5].strip(),
-                    "sensacion_termica": columnas[6].strip(),
-                    "humedad": columnas[7].strip(),
-                    "direccion_viento": direccion_viento,
-                    "velocidad_viento": velocidad_viento,
-                    "presion": columnas[9].strip()
+                    "condicion": convertir_dato(columnas[3]),
+                    "visibilidad": convertir_dato(columnas[4], es_num=True),
+                    "temperatura": convertir_dato(columnas[5], es_num=True),
+                    "sensacion_termica": convertir_dato(columnas[6], es_num=True),
+                    "humedad": convertir_dato(columnas[7], es_num=True),
+                    "direccion_viento": convertir_dato(direccion_viento),
+                    "velocidad_viento": convertir_dato(velocidad_viento, es_num=True),
+                    "presion": convertir_dato(columnas[9], es_num=True)
                 }
             except Exception:
                 reporte["lineas_invalidas"] += 1
@@ -197,4 +220,5 @@ def mostrar_resumen(observaciones: dict, lineas_invalidas: int = 0, columnas_aus
     print("\n--- REPORTE DE ARCHIVO ---")
     print(f"Líneas inválidas / omitidas: {lineas_invalidas}")
     print(f"Columnas ausentes: {columnas_ausentes}")
+    print(leer_observaciones(ruta_archivo, reporte))
     
