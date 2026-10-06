@@ -26,8 +26,8 @@ def convertir_dato(dato, es_num=False):
 
 def leer_observaciones(archivo: str, reporte: dict) -> dict:
     """Lee el archivo de observaciones del SMN y devuelve un diccionario
-    {ciudad: datos}, con los nombres de ciudad limpios y el campo de viento
-    ya separado en dirección y velocidad."""
+    {ciudad: datos}, registrando líneas inválidas, total de datos ausentes (None)
+    y faltantes por campo."""
 
     reporte["lineas_invalidas"] = 0
     reporte["columnas_ausentes"] = 0
@@ -47,11 +47,14 @@ def leer_observaciones(archivo: str, reporte: dict) -> dict:
     with open(archivo, "r", encoding="cp1252") as file:
         for linea in file:
             linea_limpia = linea.strip()
+
+            if not linea_limpia:
+                continue
+
             columnas = linea_limpia.split(";")
 
-            # Si faltan columnas, es una línea inválida/corta
+            # Si la línea tiene menos de 10 columnas, es una línea inválida
             if len(columnas) < 10:
-                reporte["columnas_ausentes"] += 1
                 reporte["lineas_invalidas"] += 1
                 continue
 
@@ -76,10 +79,12 @@ def leer_observaciones(archivo: str, reporte: dict) -> dict:
                     "presion": convertir_dato(columnas[9], es_num=True)
                 }
 
-                # Conteo de valores faltantes por campo
-                for clave, valor in datos_ciudad.items():
-                    if valor is None and clave in reporte["faltantes_por_campo"]:
-                        reporte["faltantes_por_campo"][clave] += 1
+                # Conteo de datos o columnas ausentes (los que quedaron en None)
+                for campo, valor in datos_ciudad.items():
+                    if valor is None:
+                        reporte["columnas_ausentes"] += 1
+                        if campo in reporte["faltantes_por_campo"]:
+                            reporte["faltantes_por_campo"][campo] += 1
 
                 diccionario[ciudad] = datos_ciudad
 
@@ -87,6 +92,8 @@ def leer_observaciones(archivo: str, reporte: dict) -> dict:
                 reporte["lineas_invalidas"] += 1
 
     return diccionario
+
+
 
 
 
@@ -152,7 +159,7 @@ def cantidad_ciudades(diccionario) -> list:
     for clave in diccionario:
         ciudades.append(clave)
 
-    return f"La cantidad de ciudades leídas son un total de: {len(ciudades)} y estas son: {ciudades}"
+    return f"La cantidad de ciudades leídas son un total de: {len(ciudades)}"
 
 
 
@@ -267,5 +274,6 @@ def mostrar_resumen(observaciones: dict, lineas_invalidas: int = 0, columnas_aus
     print("\n--- REPORTE DE ARCHIVO ---")
     print(f"Líneas inválidas / omitidas: {lineas_invalidas}")
     print(f"Columnas ausentes: {columnas_ausentes}")
+    
     
     
