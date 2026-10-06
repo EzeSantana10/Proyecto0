@@ -31,15 +31,25 @@ def leer_observaciones(archivo: str, reporte: dict) -> dict:
 
     reporte["lineas_invalidas"] = 0
     reporte["columnas_ausentes"] = 0
+    reporte["faltantes_por_campo"] = {
+        "condicion": 0,
+        "visibilidad": 0,
+        "temperatura": 0,
+        "sensacion_termica": 0,
+        "humedad": 0,
+        "direccion_viento": 0,
+        "velocidad_viento": 0,
+        "presion": 0
+    }
 
     diccionario = {}
 
     with open(archivo, "r", encoding="cp1252") as file:
         for linea in file:
             linea_limpia = linea.strip()
-
             columnas = linea_limpia.split(";")
 
+            # Si faltan columnas, es una línea inválida/corta
             if len(columnas) < 10:
                 reporte["columnas_ausentes"] += 1
                 reporte["lineas_invalidas"] += 1
@@ -54,7 +64,7 @@ def leer_observaciones(archivo: str, reporte: dict) -> dict:
                 hora = columnas[2].strip()
                 fecha_y_hora = parsear_fecha_hora(fecha, hora)
 
-                diccionario[ciudad] = {
+                datos_ciudad = {
                     "fecha y hora": fecha_y_hora,
                     "condicion": convertir_dato(columnas[3]),
                     "visibilidad": convertir_dato(columnas[4], es_num=True),
@@ -65,6 +75,14 @@ def leer_observaciones(archivo: str, reporte: dict) -> dict:
                     "velocidad_viento": convertir_dato(velocidad_viento, es_num=True),
                     "presion": convertir_dato(columnas[9], es_num=True)
                 }
+
+                # Conteo de valores faltantes por campo
+                for clave, valor in datos_ciudad.items():
+                    if valor is None and clave in reporte["faltantes_por_campo"]:
+                        reporte["faltantes_por_campo"][clave] += 1
+
+                diccionario[ciudad] = datos_ciudad
+
             except Exception:
                 reporte["lineas_invalidas"] += 1
 
@@ -161,26 +179,51 @@ def ciudades_completas(diccionario) -> list:
 
 
 
-def top_n_ciudades(observaciones: dict, campo: str, n: int, descendente: bool = True) -> list:
+def top_n_ciudades(observaciones: dict, campo: str, n: int = 5, descendente: bool = True, unidad: str = "") -> list:
+    
+    """Devuelve e imprime las ciudades ordenadas según 'campo' contemplando empates.
+    Imprime el ranking de forma limpia y retorna la lista de tuplas (ciudad, valor)."""
 
-    """Devuelve las n (por parámetro) ciudades ordenadas según 'campo', de mayor a menor
-        (o al revés si descendente=False), en una lista. Reutilizable tanto para temperatura
-        como para viento."""
-    
-    lista_para_ordenar = []
-    
-    for ciudad, datos in observaciones.items():
-        try:
-            valor = float(datos[campo])
-            lista_para_ordenar.append((ciudad, valor))
-        except (ValueError, KeyError):
-            continue
-            
-    lista_para_ordenar.sort(key=lambda x: x[1], reverse=descendente)
-    
-    return lista_para_ordenar[:n]
-    
+    lista_datos = []
 
+    for ciudad, info in observaciones.items():
+        val = info.get(campo)
+        
+        if val is not None and isinstance(val, (int, float)):
+            lista_datos.append([val, ciudad])
+
+    lista_datos.sort(reverse=descendente)
+
+    valores_top = []
+    for item in lista_datos:
+        valor = item[0]
+
+        if valor not in valores_top:
+            valores_top.append(valor)
+        if len(valores_top) == n:
+            break
+
+    #Parte de impresión de datos:
+
+    resultado = []
+    puesto = 1
+    val_anterior = None
+
+    for i, item in enumerate(lista_datos, start=1):
+        valor = item[0]
+        ciudad = item[1]
+
+        if valor in valores_top:
+            resultado.append((ciudad, valor))
+
+            if val_anterior is not None and valor != val_anterior:
+                puesto = i
+            val_anterior = valor
+
+            print(f"  {puesto}. {ciudad}: {valor} {unidad}".strip())
+
+    return resultado
+    
 
 
 def horarios_reportados(observaciones: dict) -> list:
@@ -210,15 +253,19 @@ def mostrar_resumen(observaciones: dict, lineas_invalidas: int = 0, columnas_aus
     print(cantidad_ciudades(observaciones))
     print(ciudades_completas(observaciones))
     print(f"Los horarios reportados son: {horarios_reportados(observaciones)}")
+
+    print("\n--- LAS TOP N CIUDADES ---")
     print("Temperaturas más altas:")
-    print(top_n_ciudades(observaciones, "temperatura", 5, True))
+    top_n_ciudades(observaciones, "temperatura", 5, True, "°C")
     print("Temperaturas más bajas:")
-    print(top_n_ciudades(observaciones, "temperatura", 5, False))
+    top_n_ciudades(observaciones, "temperatura", 5, False, "°C")
     print("Mayor velocidad de viento:")
-    print(top_n_ciudades(observaciones, "velocidad_viento", 5, True))
+    top_n_ciudades(observaciones, "velocidad_viento", 5, True, "km/h")
+    print("Menor velocidad de viento:")
+    top_n_ciudades(observaciones, "velocidad_viento", 5, False, "km/h")
 
     print("\n--- REPORTE DE ARCHIVO ---")
     print(f"Líneas inválidas / omitidas: {lineas_invalidas}")
     print(f"Columnas ausentes: {columnas_ausentes}")
-    print(leer_observaciones(ruta_archivo, reporte))
+    
     
