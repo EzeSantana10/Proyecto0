@@ -282,4 +282,73 @@ def mostrar_resumen(observaciones: dict, lineas_invalidas: int = 0, columnas_aus
     
     
     
-    
+def to_verify_file(archivo: str) -> str:
+
+    try:
+        print("Codificado en UTf-8, abriendo el archivo...")
+        with open (archivo, "r", encoding='utf-8') as f:
+            file = f.read()
+    except UnicodeDecodeError:
+        print("Probablemente latín-1, procedo a abrirlo en ese formato...")
+        
+        try:
+            with open (archivo, "r", encoding='latin-1') as f:
+                file = f.read()
+        except Exception as e:
+            print(f"No se pudo leer el archivo en latin-1: {e}")
+
+    return file
+
+
+
+
+def toconvert_file_tojson(lectura: str):
+
+    diccionario = {}
+
+    for linea in file:
+        linea_limpia = linea.strip()
+
+        if not linea_limpia:
+            continue
+
+        columnas = linea_limpia.split(";")
+
+        try:
+            ciudad = columnas[0].strip()
+            viento_sin_parsear = columnas[8].strip()
+            direccion_viento, velocidad_viento = separar_viento(viento_sin_parsear)
+
+            fecha = columnas[1].strip()
+            hora = columnas[2].strip()
+            fecha_y_hora = parsear_fecha_hora(fecha, hora)
+
+            datos_ciudad = {
+                "fecha y hora": fecha_y_hora.isoformat(timespec='minutes'),
+                "condicion": convertir_dato(columnas[3]),
+                "visibilidad": convertir_dato(columnas[4], es_num=True),
+                "temperatura": convertir_dato(columnas[5], es_num=True),
+                "sensacion_termica": convertir_dato(columnas[6], es_num=True),
+                "humedad": convertir_dato(columnas[7], es_num=True),
+                "direccion_viento": convertir_dato(direccion_viento),
+                "velocidad_viento": convertir_dato(velocidad_viento, es_num=True),
+                "presion": convertir_dato(columnas[9], es_num=True)
+            }
+
+    diccionario[ciudad] = datos_ciudad
+
+    return diccionario
+
+
+
+
+    def toconvert_to_json_dict(diccionario: dict):
+
+        json = json.dumps(observaciones, ensure_ascii=False, indent=4)
+        
+        return json
+
+
+
+
+            
