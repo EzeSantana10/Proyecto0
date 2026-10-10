@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 def convertir_dato(dato, es_num=False):
@@ -281,23 +282,19 @@ def mostrar_resumen(observaciones: dict, lineas_invalidas: int = 0, columnas_aus
         print("\nNo se recibió el desglose de faltantes por campo.")
     
     
-    
 def to_verify_file(archivo: str) -> str:
 
     try:
-        print("Codificado en UTf-8, abriendo el archivo...")
-        with open (archivo, "r", encoding='utf-8') as f:
-            file = f.read()
+        # Intenta en UTF-8 y si funciona, lo retorna al instante
+        with open(archivo, "r", encoding="utf-8") as f:
+            return f.read()
+            
     except UnicodeDecodeError:
         print("Probablemente latín-1, procedo a abrirlo en ese formato...")
-        
-        try:
-            with open (archivo, "r", encoding='latin-1') as f:
-                file = f.read()
-        except Exception as e:
-            print(f"No se pudo leer el archivo en latin-1: {e}")
-
-    return file
+        # Si falló UTF-8, intenta en latin-1 y lo retorna al instante
+        with open(archivo, "r", encoding="latin-1") as f:
+            return f.read()
+    
 
 
 
@@ -306,7 +303,7 @@ def toconvert_file_tojson(lectura: str):
 
     diccionario = {}
 
-    for linea in file:
+    for linea in lectura.splitlines():
         linea_limpia = linea.strip()
 
         if not linea_limpia:
@@ -334,19 +331,15 @@ def toconvert_file_tojson(lectura: str):
                 "velocidad_viento": convertir_dato(velocidad_viento, es_num=True),
                 "presion": convertir_dato(columnas[9], es_num=True)
             }
+            
+            diccionario[ciudad] = datos_ciudad
+        
+        except:
+            print("algo salio mal")
 
-    diccionario[ciudad] = datos_ciudad
 
     return diccionario
 
-
-
-
-    def toconvert_to_json_dict(diccionario: dict):
-
-        json = json.dumps(observaciones, ensure_ascii=False, indent=4)
-        
-        return json
 
 
 
