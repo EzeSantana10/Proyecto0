@@ -290,13 +290,11 @@ def to_verify_file(archivo: str) -> str:
             return f.read()
             
     except UnicodeDecodeError:
-        print("Probablemente latín-1, procedo a abrirlo en ese formato...")
+        print("\nProbablemente latín-1, procedo a abrirlo en ese formato...")
         # Si falló UTF-8, intenta en latin-1 y lo retorna al instante
         with open(archivo, "r", encoding="latin-1") as f:
             return f.read()
     
-
-
 
 
 def toconvert_file_tojson(lectura: str):

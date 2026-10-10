@@ -23,26 +23,44 @@ def main() -> None:
         print(f"Error: El archivo '{ruta_archivo}' está vacío.")
         sys.exit(1)
 
-    reporte = {"lineas_invalidas": 0, "columnas_ausentes": 0}
-
     if ruta_archivo.endswith('.txt'):
+        print("\nArchivo del SMN (.txt) detectado, convirtiendo a JSON...")
 
-        try:
-            lectura = fc.toconvert_file_tojson(fc.to_verify_file(ruta_archivo))
-            mi_json = json.dumps(lectura, ensure_ascii=False, indent=4)
-            print(mi_json )
-            namejson = os.path.basename(ruta_archivo).replace('.txt', '.json')
-            exit_way = os.path.join('obs_json', namejson)
+    try:
+        # 1. Lectura y procesamiento
+        raw_content = fc.to_verify_file(ruta_archivo)
+        lectura = fc.toconvert_file_tojson(raw_content)
+        mi_json = json.dumps(lectura, ensure_ascii=False, indent=4)
 
-            os.makedirs('obs_json', exist_ok=True)
+        output_dir = 'obs_json'
 
-            with open(exit_way, 'w', encoding='utf-8') as f:
-                f.write(mi_json)
+        # 2. Verificación de carpeta
+        if not os.path.exists(output_dir):
+            print(f"No se localizó la carpeta '{output_dir}', procediendo a generarla...")
+            os.makedirs(output_dir, exist_ok=True)
+            print(f"Directorio '{output_dir}' creado con éxito.\n")
+        else:
+            print(f"\nLa carpeta '{output_dir}' se encuentra disponible en el sistema.\n")
 
-        except Exception as error:
-            print(f"Error al procesar el archivo: {error}")
-            sys.exit(1)
+        # 3. Guardado
+        namejson = os.path.basename(ruta_archivo).replace('.txt', '.json')
+        exit_way = os.path.join(output_dir, namejson)
 
+        print(f"Guardando archivo en '{exit_way}'...")
+        with open(exit_way, 'w', encoding='utf-8') as f:
+            f.write(mi_json)
+        print("\nArchivo JSON guardado con éxito.\n")
+
+        # 4. Resumen final (exactamente 2 líneas)
+        total_cities = len([linea for linea in raw_content.splitlines() if linea.strip()])
+        reported_cities = len(lectura)
+
+        print(f"Registros de localidades detectados en el archivo: {total_cities}")
+        print(f"Localidades con reporte meteorológico válido: {reported_cities}\n")
+
+    except Exception as error:
+        print(f"\nError al procesar el archivo: {error}\n")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
