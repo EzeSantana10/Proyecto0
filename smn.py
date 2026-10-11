@@ -4,11 +4,29 @@ import json
 import Funciones_smn as fc
 
 def main() -> None:
+
     """Función principal para validar argumentos y ejecutar el análisis SMN."""
+
+    if len(sys.argv) == 1:
+        print("Atención: No se especificó ningún archivo de entrada.")
+        
+        txt_dir = 'datos'
+        json_dir = 'obs_json'
+        
+        txt_files = 0
+        if os.path.exists(txt_dir):
+            txt_files = len([f for f in os.listdir(txt_dir) if f.endswith('.txt')])
+
+        json_files = 0
+        if os.path.exists(json_dir):
+            json_files = len([f for f in os.listdir(json_dir) if f.endswith('.json')])
+
+        print(f"Archivos '.txt' disponibles en '{txt_dir}/': {txt_files}")
+        print(f"Archivos '.json' disponibles en '{json_dir}/': {json_files}\n")
+        sys.exit(0)
     
-    if len(sys.argv) < 2:
-        print("Error: Falta indicar la ruta del archivo de datos.")
-        print("Uso correcto: python analisis_smn.py datos/observaciones_smn.txt")
+    if len(sys.argv) > 2:
+        print("Error: Se ingresó más de un parámetro. Especifique un solo archivo.")
         sys.exit(1)
 
     ruta_archivo = sys.argv[1]
@@ -60,6 +78,39 @@ def main() -> None:
 
     except Exception as error:
         print(f"\nError al procesar el archivo: {error}\n")
+        sys.exit(1)
+
+    # Punto 2: Procesamiento de archivo .json
+    if ruta_archivo.endswith('.json'):
+        print("\nArchivo JSON detectado, analizando datos...")
+
+        try:
+            with open(ruta_archivo, 'r', encoding='utf-8') as f:
+                json_data = json.load(f)
+
+            total_cities = len(json_data)
+            reported_cities = 0
+
+            # Recorremos cada ciudad utilizando comprobación de tipo básica (type)
+            for datos in json_data.values():
+                if type(datos) == dict:
+                    tiene_reporte = False
+                    for clave, valor in datos.items():
+                        if clave != "fecha y hora" and valor is not None:
+                            tiene_reporte = True
+                            break
+                    if tiene_reporte:
+                        reported_cities += 1
+
+            print(f"Registros de localidades detectados en el archivo: {total_cities}")
+            print(f"Localidades con reporte meteorológico válido: {reported_cities}\n")
+
+        except Exception as error:
+            print(f"\nError al leer el archivo JSON: {error}\n")
+            sys.exit(1)
+
+    else:
+        print("Error: Formato de archivo no soportado. Ingrese un archivo con extensión .txt o .json.")
         sys.exit(1)
 
 if __name__ == "__main__":
